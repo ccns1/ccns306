@@ -14,14 +14,14 @@ mongoose.connect(uri, {
 
 export interface IUser extends Document {
 	email: string;
-	name: string;
 	password: string;
+	salt: string;
 }
 
 export const UserSchema: Schema = new Schema({
 	email: { type: String, required: true, unique: true },
-	name: { type: String, required: true },
 	password: { type: String, required: true },
+	salt: { type: String, required: true },
 });
 
 const User: Model<IUser> = model<IUser>('User', UserSchema);
