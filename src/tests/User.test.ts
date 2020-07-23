@@ -1,30 +1,45 @@
 import mongoose from 'mongoose';
-import UserController, { Status } from '../controllers/UserController';
+import UserController, {
+	Status,
+	IUserPayload,
+} from '../controllers/UserController';
 import { compare } from 'bcrypt';
 
-test('Creating a user', async () => {
-	const user = await UserController.createUser({
+test('Creating a user', async (): Promise<void> => {
+	const payload: IUserPayload = await UserController.createUser({
 		email: 'testmail123@testmail.com',
 		password: 'testpass',
 	});
 
-	expect(user.email).toBe('testmail123@testmail.com');
-	expect(await compare('testpass', user.password)).toBe(true);
+	if (payload.status == Status.SUCCESS && payload.user) {
+		expect(payload.user.email).toBe('testmail123@testmail.com');
+		expect(await compare('testpass', payload.user.password)).toBe(true);
+	}
 });
 
-test('Updating a user', async () => {
-	const status = await UserController.updateUser(
+test('Finding a user', async (): Promise<void> => {
+	const payload: IUserPayload = await UserController.findUser(
+		'testmail123@testmail.com'
+	);
+
+	expect(payload.status).toBe(Status.SUCCESS);
+});
+
+test('Updating a user', async (): Promise<void> => {
+	const payload: IUserPayload = await UserController.updateUser(
 		'testmail123@testmail.com',
 		'testpass2'
 	);
 
-	expect(status).toBe(Status.SUCCESS);
+	expect(payload.status).toBe(Status.SUCCESS);
 });
 
-test('Deleting a user', async () => {
-	const status = await UserController.deleteUser('testmail123@testmail.com');
+test('Deleting a user', async (): Promise<void> => {
+	const payload: IUserPayload = await UserController.deleteUser(
+		'testmail123@testmail.com'
+	);
 
-	expect(status).toBe(Status.SUCCESS);
+	expect(payload.status).toBe(Status.SUCCESS);
 });
 
-afterAll(async () => mongoose.connection.close());
+afterAll(async (): Promise<void> => await mongoose.connection.close());
