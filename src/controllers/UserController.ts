@@ -51,10 +51,8 @@ export default class UserController {
 			{ email: email },
 			(err: any, user: IUser | null): void => {
 				if (err) throw new Error(err);
-				if (user) {
-					foundUser = user;
-					status = Status.FAILURE;
-				}
+				if (user) foundUser = user;
+				else status = Status.FAILURE;
 			}
 		);
 
