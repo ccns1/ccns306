@@ -11,7 +11,7 @@ test('Creating a user', async (): Promise<void> => {
 		password: 'testpass',
 	});
 
-	if (payload.status == Status.SUCCESS && payload.user) {
+	if (payload.status == Status.ACCOUNT_NOT_FOUND && payload.user) {
 		expect(payload.user.email).toBe('testmail123@testmail.com');
 		expect(await compare('testpass', payload.user.password)).toBe(true);
 	}
@@ -22,7 +22,7 @@ test('Finding a user', async (): Promise<void> => {
 		'testmail123@testmail.com'
 	);
 
-	expect(payload.status).toBe(Status.SUCCESS);
+	expect(payload.status).toBe(Status.ACCOUNT_FOUND);
 });
 
 test('Updating a user', async (): Promise<void> => {
@@ -31,7 +31,7 @@ test('Updating a user', async (): Promise<void> => {
 		'testpass2'
 	);
 
-	expect(payload.status).toBe(Status.SUCCESS);
+	expect(payload.status).toBe(Status.ACCOUNT_UPDATED);
 });
 
 test('Deleting a user', async (): Promise<void> => {
@@ -39,7 +39,7 @@ test('Deleting a user', async (): Promise<void> => {
 		'testmail123@testmail.com'
 	);
 
-	expect(payload.status).toBe(Status.SUCCESS);
+	expect(payload.status).toBe(Status.ACCOUNT_DELETED);
 });
 
 afterAll(async (): Promise<void> => await mongoose.connection.close());

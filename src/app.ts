@@ -52,37 +52,22 @@ app.post(
 	'/api/login',
 	async (req: Request, res: Response): Promise<void> => {
 		const user: IUser = req.body;
-		const payload: IUserPayload = await UserController.findUser(user.email);
-		if (payload.status == Status.SUCCESS && payload.user) {
+		const payload: IUserPayload = await UserController.createUser(user);
+		if (payload.status == Status.ACCOUNT_NOT_FOUND) {
+			const accessToken = jwt.sign(user, ACCESS_TOKEN_SECRET);
+			res.json({ accessToken, user });
+		} else if (payload.status == Status.ACCOUNT_FOUND && payload.user) {
 			const match = await compare(user.password, payload.user.password);
 			if (match) {
 				const accessToken = jwt.sign(user, ACCESS_TOKEN_SECRET);
-				res.json({ accessToken });
+				res.json({ accessToken, user });
 			} else
 				res.json({
-					status: payload.status,
 					message: 'Wrong password',
 				});
-		} else
+		} else if (payload.status == Status.ERROR)
 			res.json({
-				status: payload.status,
-				message: 'Login failed',
-			});
-	}
-);
-
-app.post(
-	'/api/signup',
-	async (req: Request, res: Response): Promise<void> => {
-		const user: IUser = req.body;
-		const payload: IUserPayload = await UserController.createUser(user);
-		if (payload.status == Status.SUCCESS) {
-			const accessToken = jwt.sign(user, ACCESS_TOKEN_SECRET);
-			res.json({ accessToken });
-		} else
-			res.json({
-				status: payload.status,
-				message: 'Account could not be created',
+				message: 'Error',
 			});
 	}
 );
