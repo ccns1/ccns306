@@ -11,6 +11,7 @@ const users = {};
 const socketToRoom = {};
 
 io.on('connection', (socket) => {
+    console.log(socket.id)
 	socket.on('join room', (roomID) => {
 		console.log('dasdadsaa');
 		if (users[roomID]) {
