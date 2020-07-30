@@ -1,13 +1,18 @@
+  
 import React from 'react';
-import './App.css';
-import Form from './components/Form';
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+import CreateRoom from "./components/CreateRoom";
+import Room from "./components/Room";
 
 function App() {
-	return (
-		<div className='App'>
-			<Form />
-		</div>
-	);
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route path="/" exact component={CreateRoom} />
+        <Route path="/room/:roomID" component={Room} />
+      </Switch>
+    </BrowserRouter>
+  );
 }
 
 export default App;
