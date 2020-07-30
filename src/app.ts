@@ -11,21 +11,77 @@ import UserController, {
 	Status,
 } from './controllers/UserController';
 import { compare } from 'bcrypt';
+import socket from 'socket.io';
 
 config();
+
+interface IEmptyUser {
+	email: null;
+	password: null;
+}
 
 declare global {
 	namespace Express {
 		interface Request {
-			user: IUser;
+			user: IUser | IEmptyUser;
 		}
 	}
 }
 
 const app: Application = express();
+const server = createServer(app);
 const port = process.env.PORT || 5000;
 const ACCESS_TOKEN_SECRET =
 	process.env.ACCESS_TOKEN_SECRET || 'ACCESS_TOKEN_SECRET';
+const io = socket(server);
+
+const users: any = {};
+
+const socketToRoom: any = {};
+
+io.on('connection', (socket) => {
+	socket.on('join room', (roomID) => {
+		if (users[roomID]) {
+			const length = users[roomID].length;
+			if (length === 4) {
+				socket.emit('room full');
+				return;
+			}
+			users[roomID].push(socket.id);
+		} else {
+			users[roomID] = [socket.id];
+		}
+		socketToRoom[socket.id] = roomID;
+		const usersInThisRoom = users[roomID].filter(
+			(id: string) => id !== socket.id
+		);
+
+		socket.emit('all users', usersInThisRoom);
+	});
+
+	socket.on('sending signal', (payload) => {
+		io.to(payload.userToSignal).emit('user joined', {
+			signal: payload.signal,
+			callerID: payload.callerID,
+		});
+	});
+
+	socket.on('returning signal', (payload) => {
+		io.to(payload.callerID).emit('receiving returned signal', {
+			signal: payload.signal,
+			id: socket.id,
+		});
+	});
+
+	socket.on('disconnect', () => {
+		const roomID = socketToRoom[socket.id];
+		let room = users[roomID];
+		if (room) {
+			room = room.filter((id: string) => id !== socket.id);
+			users[roomID] = room;
+		}
+	});
+});
 
 app.use(express.static('client/build'));
 app.use(cors());
@@ -35,18 +91,27 @@ app.use(bodyParser.raw());
 
 const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
 	const token = req.headers['authorization'];
-	if (token == null) return res.sendStatus(401);
+	if (token == null) req.user = { email: null, password: null };
+	else
+		jwt.verify(token, ACCESS_TOKEN_SECRET, (err: any, user: any) => {
+			if (err) req.user = { email: null, password: null };
+			else req.user = user;
+		});
 
-	jwt.verify(token, ACCESS_TOKEN_SECRET, (err: any, user: any) => {
-		if (err) res.sendStatus(403);
-		req.user = user;
-		next();
-	});
+	next();
 };
 
-app.post('/', authenticateToken, (req: Request, res: Response) => {
-	res.send(req.user);
+app.get('/', (req: Request, res: Response): void => {
+	res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
 });
+
+app.post(
+	'/api/authenticate',
+	authenticateToken,
+	(req: Request, res: Response) => {
+		res.send(req.user);
+	}
+);
 
 app.post(
 	'/api/login',
@@ -60,7 +125,7 @@ app.post(
 			const match = await compare(user.password, payload.user.password);
 			if (match) {
 				const accessToken = jwt.sign(user, ACCESS_TOKEN_SECRET);
-				res.json({ accessToken, user });
+				res.json({ authorization: accessToken, user });
 			} else
 				res.json({
 					message: 'Wrong password',
@@ -73,10 +138,8 @@ app.post(
 );
 
 app.get('*', (req: Request, res: Response): void => {
-	res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+	res.redirect('/');
 });
-
-const server = createServer(app);
 
 server.listen(port, async () => {
 	console.log(`Server running on http://localhost:${port}`);

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
 import styled from 'styled-components';
+import { AuthenticationContext } from '../App';
 
 const Container = styled.div`
 	padding: 20px;
@@ -75,6 +76,9 @@ const Room = (props) => {
 					const item = peersRef.current.find((p) => p.peerID === payload.id);
 					item.peer.signal(payload.signal);
 				});
+			})
+			.catch((err) => {
+				console.log(err);
 			});
 	}, []);
 
