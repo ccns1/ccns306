@@ -101,10 +101,6 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
 	next();
 };
 
-app.get('/', (req: Request, res: Response): void => {
-	res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-});
-
 app.post(
 	'/api/authenticate',
 	authenticateToken,
@@ -138,7 +134,7 @@ app.post(
 );
 
 app.get('*', (req: Request, res: Response): void => {
-	res.redirect('/');
+	res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
 });
 
 server.listen(port, async () => {
