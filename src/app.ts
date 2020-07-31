@@ -134,7 +134,7 @@ app.post(
 );
 
 app.get('*', (req: Request, res: Response): void => {
-	res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+	res.sendFile(path.resolve('client', 'build', 'index.html'));
 });
 
 server.listen(port, async () => {
