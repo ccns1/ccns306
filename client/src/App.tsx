@@ -1,6 +1,5 @@
 import React, {
 	FunctionComponent,
-	// createContext,
 	useEffect,
 	useState,
 	createContext,
@@ -32,6 +31,7 @@ const App: FunctionComponent = () => {
 		})
 			.then((res) => res.json())
 			.then((foundUser) => setUser(foundUser));
+		// eslint-disable-next-line
 	}, []);
 
 	return (
